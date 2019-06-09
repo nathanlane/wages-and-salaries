@@ -14,66 +14,11 @@ output:
 library(readxl)
 library(forcats)
 library(ggrepel)
-```
 
-```
-## Loading required package: ggplot2
-```
-
-```
-## Registered S3 methods overwritten by 'ggplot2':
-##   method         from 
-##   [.quosures     rlang
-##   c.quosures     rlang
-##   print.quosures rlang
-```
-
-```r
 library(here)
-```
-
-```
-## here() starts at C:/Users/Philip/Documents/GitHub/theambitiouseconomist
-```
-
-```r
 library(ggbeeswarm)
 library(janitor)
-```
-
-```
-## 
-## Attaching package: 'janitor'
-```
-
-```
-## The following objects are masked from 'package:stats':
-## 
-##     chisq.test, fisher.test
-```
-
-```r
 library(dplyr)
-```
-
-```
-## 
-## Attaching package: 'dplyr'
-```
-
-```
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-```
-
-```
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-```r
 library(stringr)
 library(tidyr)
 library(ggplot2)
@@ -209,6 +154,40 @@ ggsave(here("output", "average_salaries_gender_category.svg"))
 ```
 
 
+```r
+experiment_bins <- function(bins = NULL) {tbl14b_by_occupation %>% 
+  filter(year %in% c("2013–14", "2016–17")) %>% 
+  ggplot(aes(x = total_salary, 
+             fill = sex, 
+             color = sex,
+             weights = n_individuals)) + 
+    geom_histogram(bins = bins) + 
+    scale_x_log10() + 
+    guides(fill = FALSE, color = FALSE) + 
+    theme_minimal_modified() + 
+    facet_grid(rows = vars(year), cols = vars(sex)) + 
+    labs(title = glue::glue("Average salaries weighted by number of individuals (bins = {bins}"), 
+         x = "Salary and wages (logarithmic scale)", 
+         caption = "Salary and wages data, Taxation Statistics 2016-2017")
+}
+experiment_bins(bins = 30)
+```
+
+![](wages_aus_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
+```r
+experiment_bins(bins = 20)
+```
+
+![](wages_aus_files/figure-html/unnamed-chunk-4-2.png)<!-- -->
+
+```r
+experiment_bins(bins = 15)
+```
+
+![](wages_aus_files/figure-html/unnamed-chunk-4-3.png)<!-- -->
+
+
 
 ```r
 tbl14b_by_occupation %>% 
@@ -218,7 +197,7 @@ tbl14b_by_occupation %>%
              color = sex,
              weights = n_individuals,
              y = ..density..)) + 
-    geom_histogram() + 
+    geom_histogram(bins = 30) + 
     scale_x_log10() + 
     guides(fill = FALSE, color = FALSE) + 
     theme_minimal_modified() + 
@@ -228,11 +207,7 @@ tbl14b_by_occupation %>%
          caption = "Salary and wages data, Taxation Statistics 2016-2017")
 ```
 
-```
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
-```
-
-![](wages_aus_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+![](wages_aus_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 
 ```r
 ggsave(here("output", "salaries_distribution.svg"))
@@ -240,7 +215,6 @@ ggsave(here("output", "salaries_distribution.svg"))
 
 ```
 ## Saving 7 x 5 in image
-## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 ```
 
 
@@ -289,7 +263,7 @@ subset_14b %>%
        caption = "Occupations defined by ANZSCO v. 1.2. \nEach data point represents an occupation. \n Salary and wages data, Taxation Statistics 2016-2017") 
 ```
 
-![](wages_aus_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+![](wages_aus_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
 ```r
 ggsave(here("output", "female_over_male.svg"))
@@ -350,7 +324,7 @@ subset_14b %>%
 ## Warning: Removed 7 rows containing non-finite values (stat_density_ridges).
 ```
 
-![](wages_aus_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](wages_aus_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 ```r
 ggsave(here("output", "narrowing_gender_gap.svg"))
