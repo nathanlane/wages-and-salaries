@@ -8,13 +8,14 @@ output:
     df_print: paged
 ---
 
+## Preprocessing
 
 
 ```r
 library(readxl)
 library(forcats)
 library(ggrepel)
-
+library(ggridges)
 library(here)
 library(ggbeeswarm)
 library(janitor)
@@ -32,7 +33,6 @@ read_excel(here("data",
   filter(sex != "i. all ranges") %>% 
   # filter out occupation blank
   filter(str_sub(occupation_unit_group1, 1, 1) != "0") -> tbl14b
-
 
 tibble(groups = 1:9, 
        names = c("Managers", 
@@ -75,11 +75,7 @@ tbl14b %>%
   # remove observations where the number of individuals is less than the 5% quantile for each year (around 62) 
   group_by(year) %>% 
   filter(n_individuals > quantile(n_individuals, .05)) -> tbl14b_by_occupation
-```
 
-
-
-```r
 # now check for occupations where there's only 1 gender, then anti-join to remove 
 tbl14b_by_occupation %>% 
   count(occupation, year) %>% 
@@ -106,9 +102,13 @@ tbl14b_by_main %>%
                          ifelse(sex == "Female", 
                                 glue::glue("Female managers earn {pct}"), 
                                 "of an av. male's salary"), 
-                         pct))-> tbl14b_pcts
+                         pct)) -> tbl14b_pcts
+```
+
+## Average salaries by gender and broad category
 
 
+```r
 tbl14b_by_main %>% 
   filter(year == "2016–17", names != "Others") %>% 
   left_join(tbl14b_pcts, by = c("year", "names", "sex")) %>%
@@ -153,40 +153,7 @@ ggsave(here("output", "average_salaries_gender_category.svg"))
 ## Warning: Removed 7 rows containing missing values (geom_text).
 ```
 
-
-```r
-experiment_bins <- function(bins = NULL) {tbl14b_by_occupation %>% 
-  filter(year %in% c("2013–14", "2016–17")) %>% 
-  ggplot(aes(x = total_salary, 
-             fill = sex, 
-             color = sex,
-             weights = n_individuals)) + 
-    geom_histogram(bins = bins) + 
-    scale_x_log10() + 
-    guides(fill = FALSE, color = FALSE) + 
-    theme_minimal_modified() + 
-    facet_grid(rows = vars(year), cols = vars(sex)) + 
-    labs(title = glue::glue("Average salaries weighted by number of individuals (bins = {bins}"), 
-         x = "Salary and wages (logarithmic scale)", 
-         caption = "Salary and wages data, Taxation Statistics 2016-2017")
-}
-experiment_bins(bins = 30)
-```
-
-![](wages_aus_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
-
-```r
-experiment_bins(bins = 20)
-```
-
-![](wages_aus_files/figure-html/unnamed-chunk-4-2.png)<!-- -->
-
-```r
-experiment_bins(bins = 15)
-```
-
-![](wages_aus_files/figure-html/unnamed-chunk-4-3.png)<!-- -->
-
+## Salaries distribution 
 
 
 ```r
@@ -207,7 +174,7 @@ tbl14b_by_occupation %>%
          caption = "Salary and wages data, Taxation Statistics 2016-2017")
 ```
 
-![](wages_aus_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+![](wages_aus_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
 ```r
 ggsave(here("output", "salaries_distribution.svg"))
@@ -216,6 +183,43 @@ ggsave(here("output", "salaries_distribution.svg"))
 ```
 ## Saving 7 x 5 in image
 ```
+
+
+```r
+# check if using counts, changing bin sizes changes the substance of the conclusions
+experiment_bins <- function(bins = NULL) {tbl14b_by_occupation %>% 
+  filter(year %in% c("2013–14", "2016–17")) %>% 
+  ggplot(aes(x = total_salary, 
+             fill = sex, 
+             color = sex,
+             weights = n_individuals)) + 
+    geom_histogram(bins = bins) + 
+    scale_x_log10() + 
+    guides(fill = FALSE, color = FALSE) + 
+    theme_minimal_modified() + 
+    facet_grid(rows = vars(year), cols = vars(sex)) + 
+    labs(title = glue::glue("Average salaries weighted by number of individuals (bins = {bins}"), 
+         x = "Salary and wages (logarithmic scale)", 
+         caption = "Salary and wages data, Taxation Statistics 2016-2017")
+}
+experiment_bins(bins = 30)
+```
+
+![](wages_aus_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
+
+```r
+experiment_bins(bins = 20)
+```
+
+![](wages_aus_files/figure-html/unnamed-chunk-5-2.png)<!-- -->
+
+```r
+experiment_bins(bins = 15)
+```
+
+![](wages_aus_files/figure-html/unnamed-chunk-5-3.png)<!-- -->
+
+## Gender wage gap for each occupation (narrow)
 
 
 ```r
@@ -233,14 +237,10 @@ tbl14b_by_occupation %>%
   filter(!occupation %in% c("Occupation blank",
                             "Miscellaneous type not specified",
                             "Occupation not matched")) -> subset_14b
-```
 
-```r
 subset_14b %>% 
   select(year, female_pct_male, occupation, names) %>%
   filter(year == "2016–17", names != "Others") %>% 
-#  spread(year, female_pct_male) %>% 
-#  mutate(pp_change = `2016–17` - `2013–14`) %>% 
   mutate(names = factor(names, levels = anzsco_main_classes$names), 
          occupation_lab = ifelse(female_pct_male > 1.18 | female_pct_male < .5, occupation, ""), 
          gap_color = female_pct_male > 1) %>% 
@@ -263,7 +263,7 @@ subset_14b %>%
        caption = "Occupations defined by ANZSCO v. 1.2. \nEach data point represents an occupation. \n Salary and wages data, Taxation Statistics 2016-2017") 
 ```
 
-![](wages_aus_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](wages_aus_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
 ```r
 ggsave(here("output", "female_over_male.svg"))
@@ -273,27 +273,10 @@ ggsave(here("output", "female_over_male.svg"))
 ## Saving 7 x 5 in image
 ```
 
+## Distribution of changes in gender gap 
+
 
 ```r
-library(ggbeeswarm)
-library(forcats)
-library(ggridges)
-```
-
-```
-## 
-## Attaching package: 'ggridges'
-```
-
-```
-## The following object is masked from 'package:ggplot2':
-## 
-##     scale_discrete_manual
-```
-
-```r
-library(hrbrthemes)
-
 subset_14b %>%
   select(year, gap_pct, occupation, names) %>%
   spread(year, gap_pct) %>%
@@ -324,7 +307,7 @@ subset_14b %>%
 ## Warning: Removed 7 rows containing non-finite values (stat_density_ridges).
 ```
 
-![](wages_aus_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
+![](wages_aus_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
 ```r
 ggsave(here("output", "narrowing_gender_gap.svg"))
@@ -332,9 +315,6 @@ ggsave(here("output", "narrowing_gender_gap.svg"))
 
 ```
 ## Saving 7 x 5 in image
-```
-
-```
 ## Picking joint bandwidth of 1.32
 ```
 
