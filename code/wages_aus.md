@@ -1,5 +1,6 @@
 ---
-title: "R Notebook"
+title: "Gender differences in wages and salaries in Australia"
+author: "Philip Khor"
 output:
   html_document:
     df_print: paged
@@ -142,7 +143,7 @@ tbl14b_by_main %>%
 ![](wages_aus_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
 
 ```r
-ggsave(here("output", "average_salaries_gender_category.svg"))
+ggsave(here("output", "average_salaries_gender_category.png"))
 ```
 
 ```
@@ -177,7 +178,7 @@ tbl14b_by_occupation %>%
 ![](wages_aus_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
 ```r
-ggsave(here("output", "salaries_distribution.svg"))
+ggsave(here("output", "salaries_distribution.png"))
 ```
 
 ```
@@ -245,7 +246,7 @@ subset_14b %>%
          occupation_lab = ifelse(female_pct_male > 1.18 | female_pct_male < .5, occupation, ""), 
          gap_color = female_pct_male > 1) %>% 
   ggplot(aes(x = names, y = female_pct_male, color = gap_color)) + 
-  geom_quasirandom() + 
+  geom_quasirandom(size = .6) + 
   geom_text_repel(aes(label = str_wrap(occupation_lab, 10)), size = 3) + 
   guides(color = FALSE) + 
   # coord_flip() + 
@@ -266,7 +267,7 @@ subset_14b %>%
 ![](wages_aus_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
 
 ```r
-ggsave(here("output", "female_over_male.svg"))
+ggsave(here("output", "female_over_male.png"))
 ```
 
 ```
@@ -310,7 +311,7 @@ subset_14b %>%
 ![](wages_aus_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
 ```r
-ggsave(here("output", "narrowing_gender_gap.svg"))
+ggsave(here("output", "narrowing_gender_gap.png"))
 ```
 
 ```
